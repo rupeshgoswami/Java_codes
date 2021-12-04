@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<script type="text/javascript">
+function getBankdetails()
+{
+	var ifsc=document.getElementById("ifsc").value;
+	alert("ok "+ifsc);
+	
+	 var h;
+     if (window.XMLHttpRequest)
+	  {
+	  // code for IE7+, Firefox, Chrome, Opera, Safari
+	       h=new XMLHttpRequest();
+	  }
+	  else
+	  {// code for IE6, IE5
+	   h=new ActiveXObject("Microsoft.XMLHTTP");
+	   }
+	
+	
+     
+     
+     h.onreadystatechange=function()
+     {
+     if (h.readyState==4 && h.status==200)
+    {
+    //document.getElementById("fname").value
+     var s=h.responseText;
+           
+         document.getElementById("otp1").value=s
+         
+    }
+      
+     }
+     
+     
+     
+     
+     
+     
+     
+     h.open("GET","Bankserv?ifscadd="+ifsc,true);
+     h.send();
+     
+	
+	
+	
+	
+	
+	
+	}
+
+
+</script>
+
+
+</head>
+<body>
+<form action="Bankserv">
+<table border="3" bgcolor="yellow">
+<tr><td>Account No</td>
+<td><input type="text" name="amount"  size="16"></td></tr>
+<tr><td>IFSC </td><td><input type="text" name="ifsc" size="8" id="ifsc" onblur="getBankdetails()">  </td></tr> 
+<tr><td>Amount </td><td><input type="text" size="8" name="otp" id="otp1"></td></tr>
+
+
+<tr><td><input type="submit" value="pay"></td></tr>
+
+
+</table>
+
+
+
+
+
+</form>
+  
+  
+
+
+</body>
+</html>

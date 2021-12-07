@@ -1,0 +1,1095 @@
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic"%>
+ <%@page import="com.ignoaps.utils.IConstant"%>
+<%@ taglib  uri="http://java.sun.com/jstl/core"  prefix="c"%>
+<%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display"%>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">  
+ <link href="css/jquery.datepick.css" rel="stylesheet">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="js/jquery.plugin.js"></script>
+<script src="js/jquery.datepick.js"></script>
+ <style type="text/css">		
+	table.dataTable1 {
+    border-collapse: collapse;
+	width:95%;
+	margin-top: 20px;
+	   margin-left: auto;
+    margin-right: auto;
+	background-color:white;
+}
+table.dataTable1 thead {
+	background-color:#3B0B17;
+	
+	color:white;
+	font-style:bold;
+	font-size:14px;
+	
+/*	padding: 2px 2px 0px 0px;*/
+
+}
+
+table.dataTable1 tr td {
+font-size:14px;
+font-family : Times New Roman, Georgia, Serif;
+color:black;
+padding:0px 0px 0px 0px;
+height: 30px;
+
+}
+		
+</style> 
+<!-- <script>
+$(function() {
+	$('#popupDatepicker').datepick();
+	$('#inlineDatepicker').datepick({onSelect: showDate});
+});
+  </script> -->
+  
+<script type="text/javascript">
+
+
+ 		var controlName = "";
+ 		alert(document.forms[0].subDistrictMunicipalCode.value);
+ 		var GET_DISTRICT = "<%=IConstant.GET_DISTRICT%>"; 		
+ 		var GET_SUBDISTRICT = "<%=IConstant.GET_SUBDISTRICT%>";
+ 		var GET_GRAMPANCHAYAT = "<%=IConstant.GET_GRAMPANCHAYAT%>";
+		var GET_VILLAGE = "<%=IConstant.GET_VILLAGE%>"; 	
+		var GET_HABITATION= "<%=IConstant.GET_HABITATION%>";
+		 
+		function submitForDetails(primaryObject,dependantObject,funcParam)
+		{
+			var http_request;
+			controlName=dependantObject.name;			
+			http_request = createAjaxRequest();
+			primaryObjValue = primaryObject.value;
+			if(primaryObject.value !="Select"){
+				if(primaryObject.value == "Select,Select"){
+					return;
+				}
+				urlString = "<%=request.getContextPath()%>/DataPopulatorServlet?mode=getDis"
+				+"&controlName="+controlName
+				+"&stateCode="+document.forms[0].stateCode.value
+				+"&districtCode="+document.forms[0].districtCode.value
+				+"&areaCode="+document.forms[0].area.value
+				+"&subDistrictCode="+document.forms[0].subDistrictMunicipalCode.value			 
+				+"&funcParam="+funcParam;			 
+				 
+				http_request.open('POST',urlString, true);
+				http_request.send(null);
+				http_request.onreadystatechange = popDetails;
+			}
+		}
+	 	
+	 	function popDetails()//function to be called onchange
+		{
+			if(http_request.readyState == 4){			 
+				evalScript(http_request.responseText);
+		
+			}
+		}
+			
+		function areaChange()
+		{		
+		 
+		 		
+		}		
+		function  stateFunc()
+		{
+			clearMultiSelect('districtCode');			
+			clearMultiSelect('area');
+			addOption(document.forms[0].area,'-Select Area','0'); 
+			addOption(document.forms[0].area,'RURAL','2'); 
+			addOption(document.forms[0].area,'URBAN','1'); 
+			clearMultiSelect('subDistrictMunicipalCode');
+			addOption(document.forms[0].subDistrictMunicipalCode,'-Select-','0');     	 
+			submitForDetails(document.forms[0].stateCode,document.forms[0].districtCode,GET_DISTRICT);
+		 
+		}
+		function  districtFunc()
+		{
+			clearMultiSelect('area');
+			addOption(document.forms[0].area,'-Select Area','0'); 
+			addOption(document.forms[0].area,'RURAL','2'); 
+			addOption(document.forms[0].area,'URBAN','1'); 
+			clearMultiSelect('subDistrictMunicipalCode');
+			addOption(document.forms[0].subDistrictMunicipalCode,'-Select-','0');  	
+		}		 
+			
+		function  areaFunc()
+		{
+			clearMultiSelect('subDistrictMunicipalCode');     	
+			submitForDetails(document.forms[0].districtCode,document.forms[0].subDistrictMunicipalCode,'GET_SUBDISTRICT');
+		}	
+	</script>
+<script type="text/javascript">
+
+function downloadData(val)
+{
+	
+	 //alert(val);
+    document.forms[0].action = val;
+	 document.forms[0].submit();	
+	 
+}
+
+
+function downloadRecords(val)
+{
+	   /*  alert("hiii");
+	    alert(val); */
+	    
+		document.forms[0].action = val;
+	    document.forms[0].submit();	  
+	
+	
+	}
+
+
+	function validateForm()
+	{
+		var sname = document.getElementById("stateCode");
+	     var dname = document.getElementById("districtCode");
+	     var subname =document.getElementById("subDistrictMunicipalCode");
+		
+		if(document.getElementById("area").value != "0" && document.getElementById("subDistrictMunicipalCode").value == "0")
+			{
+			   alert("Please select subdistrict/municipality");
+			   document.getElementById("subDistrictMunicipalCode").focus();
+			   return false;
+			}
+		    
+		
+		if(document.getElementById("popupDatepicker").value == "0")
+			{
+			 alert("Please select  financial year");
+			  document.getElementById("popupDatepicker") .focus();
+			  return false;
+			}
+		
+		if(document.getElementById("status").value == "0")
+		{
+		 alert("Please select  status");
+		  document.getElementById("status") .focus();
+		  return false;
+		}
+		
+		     //alert(document.getElementById("popupDatepicker").value);
+		    document.forms[0].action = "discontinueRecords.do?method=showDiscontinueDetails&stateCode="+document.getElementById("stateCode").value+"&districtCode="+document.getElementById("districtCode").value+"&subdistrictCode="+document.getElementById("subDistrictMunicipalCode").value+"&area="+document.getElementById("area").value+"&date="+document.getElementById("popupDatepicker").options[document.getElementById("popupDatepicker").selectedIndex].text+"&stateName="+sname.options[sname.selectedIndex].text+"&districtName="+dname.options[dname.selectedIndex].text+"&subdistrictName="+subname.options[subname.selectedIndex].text+"&status="+document.getElementById("status").value;
+		    document.forms[0].submit();	  
+	}   
+
+</script>
+
+<html:form  action="login/discontinueRecords">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+</head>
+<body>
+<section>
+		<h2 class="primary-heading">Discontinue/Appealed/Rejected Report</h2>
+		<div class="card mb-3">
+			<div class="card-body">
+				<div class="row">
+				<div class="col-lg-3 col-md-6">
+						<div class="md-form">
+							<label for="stateCode" class="active" style="top: -.25rem;"><bean:message
+									key="pensr.state" /><span class="text-danger font-weight-500">*</span></label>
+							<html:select property="stateCode" styleId="stateCode"
+								styleClass="mdb-select md-form colorful-select"
+								onchange="stateFunc()">
+								<html:options collection="stateList" property="stateCode"
+									labelProperty="stateName" />
+							</html:select>
+						</div>
+					</div>
+					<div class="col-lg-3 col-md-6">
+						<div class="md-form">
+							<label for="districtCode" class="active" style="top: -.25rem;"><bean:message key="pensr.district" /></label>
+							<html:select property="districtCode" styleId="districtCode"
+								styleClass="mdb-select md-form colorful-select"
+								onchange="districtFunc()">
+								<logic:present name="districtList">
+						<html:options collection="districtList" property="propertyCode" labelProperty="propertyValue" />
+					</logic:present>
+					<logic:notPresent name="districtList">
+						<html:option value="0">--Select District--</html:option>
+					</logic:notPresent>
+							</html:select>
+						</div>
+					</div>
+					<div class="col-lg-3 col-md-6">
+						<div class="md-form">
+							<label for="area" class="active" style="top: -.25rem;"><bean:message key="pensr.area" /></label>
+							<html:select property="area" styleId="area"
+								styleClass="mdb-select md-form colorful-select"
+								onchange="areaFunc();areaChange(this);" >
+								<logic:present name="areaList">
+					<html:option value="0">--Select Area--</html:option>
+						<html:options collection="areaList" property="propertyCode" labelProperty="propertyValue" />
+					</logic:present>
+							</html:select>
+						</div>
+					</div>
+					<logic:equal name="area" value="0">
+							<div class="col-lg-3 col-md-6">
+								<div class="md-form">
+									<label for="area" class="active" style="top: -.25rem;"><bean:message
+											key="pensr.subDistmun" /></label>
+									<html:select property="subDistrictMunicipalCode"
+										styleId="subDistrictMunicipalCode"
+										styleClass="mdb-select md-form colorful-select"
+										onchange="subDisMunFunc();">
+										<logic:present name="subDistrictList">
+											<html:options collection="subDistrictList"
+												property="propertyCode" labelProperty="propertyValue" />
+										</logic:present>
+										<logic:notPresent name="subDistrictList">
+											<html:option value="0">--Select--</html:option>
+										</logic:notPresent>
+									</html:select>
+								</div>
+							</div>
+						</logic:equal>
+					<logic:equal name="area" value="1">
+							<div class="col-lg-3 col-md-6">
+								<div class="md-form">
+									<label for="area" class="active" style="top: -.25rem;"><bean:message
+											key="pensr.municipalarea" /></label>
+									<html:select property="subDistrictMunicipalCode"
+										styleId="subDistrictMunicipalCode"
+										styleClass="mdb-select md-form colorful-select"
+										onchange="subDisMunFunc();">
+										<logic:present name="subDistrictList">
+											<html:options collection="subDistrictList"
+												property="propertyCode" labelProperty="propertyValue" />
+										</logic:present>
+										<logic:notPresent name="subDistrictList">
+											<html:option value="0">--Select--</html:option>
+										</logic:notPresent>
+									</html:select>
+								</div>
+							</div>
+						</logic:equal>
+						<logic:equal name="area" value="2">
+							<div class="col-lg-3 col-md-6">
+								<div class="md-form">
+									<label for="area" class="active" style="top: -.25rem;"><bean:message
+											key="pensr.subDist" /></label>
+									<html:select property="subDistrictMunicipalCode"
+										styleId="subDistrictMunicipalCode"
+										styleClass="mdb-select md-form colorful-select"
+										onchange="subDisMunFunc();">
+										<logic:notPresent name="subDistrictList">
+											<html:option value="0">--Select--</html:option>
+										</logic:notPresent>
+										<logic:present name="subDistrictList">
+											<html:options collection="subDistrictList"
+												property="propertyCode" labelProperty="propertyValue" />
+										</logic:present>
+									</html:select>
+								</div>
+							</div>
+						</logic:equal>
+						
+					</div>
+					<div class="row">
+						<div class="col-lg-3 col-md-6">
+							<div class="md-form">
+								<label for="popupDatepicker" class="active"
+									style="top: -.25rem;">Financial Year</label>
+								<html:select property="year" styleId="popupDatepicker"
+									styleClass="mdb-select md-form colorful-select">
+									<html:option value="0">Select Year</html:option>
+									<%-- <html:option value="2016-2017">2016-2017</html:option> --%>
+									<html:options collection="finYear" property="yearCode"
+										labelProperty="year" />
+								</html:select>
+							</div>
+						</div>
+						<div class="col-lg-3 col-md-6">
+							<div class="md-form">
+								<label for="status" class="active" style="top: -.25rem;">Select
+									Status</label>
+								<html:select property="status" styleId="status"
+									styleClass="mdb-select md-form colorful-select">
+									<html:option value="0">Select Status</html:option>
+									<html:option value="DISCONTINUED">DISCONTINUED</html:option>
+									<html:option value="APPEALED">APPEALED</html:option>
+									<html:option value="REJECTED">REJECTED</html:option>
+								</html:select>
+							</div>
+						</div>
+						<div style="display: none;">
+								<select name="abc" id="abc"
+									class="mdb-select md-form colorful-select">
+									<option value="0">--bbb--</option>
+								</select>
+							</div>
+					</div>
+				</div>
+				<div class="card-footer text-center py-0">
+				<html:button property="" onclick="validateForm()"
+					styleClass="btn btn-primary blue-gradient z-depth-1a waves-effect waves-light">
+						Submit
+					</html:button>
+
+
+				<html:button property="" onclick="location.href='home.do'"
+					styleClass="btn btn-outline-primary">
+						Cancel
+					</html:button>
+
+			</div>
+				</div>
+				<logic:present name="dataList">
+				<table align="center">
+					<tr>
+						<logic:equal name="level" value="state">
+							<td align="center"><font color="black"><bean:write
+										name="stateName" /></font></td>
+						</logic:equal>
+						<logic:equal name="level" value="district">
+							<td align="center"><font color="black"><bean:write
+										name="stateName" />&nbsp;-><bean:write name="districtName" /></font></td>
+						</logic:equal>
+						<logic:equal name="level" value="subdistrict">
+							<td align="center"><font color="black"><bean:write
+										name="stateName" />&nbsp;-><bean:write name="districtName" />&nbsp;-><bean:write
+										name="subdistrictName" /></font></td>
+						</logic:equal>
+					</tr>
+					<tr>
+						<td align="center"><font color="black">SCHEME&nbsp;:&nbsp;<bean:write
+									name="fromScheme" /></font></td>
+					</tr>
+					<tr>
+						<td align="center"><font color="black">STATUS&nbsp;:&nbsp;<bean:write
+									name="status" /></font></td>
+					</tr>
+					<tr>
+						<td align="center"><font color="black">FINANCIAL
+								YEAR&nbsp;:&nbsp;<bean:write name="finyear" />
+						</font></td>
+					</tr>
+				</table>
+				<div class="card">
+				<div class="card-body">
+					<table id="searchDataTable" class="table table-striped">
+						<thead>
+								<tr>
+									<th>S.No</th>
+									<logic:equal name="level" value="state">
+										<th>District</th>
+									</logic:equal>
+									<logic:equal name="level" value="district">
+										<th>Subdistrict</th>
+									</logic:equal>
+									<logic:equal name="level" value="subdistrict">
+										<th>Grampanchayat/<br />Ward
+										</th>
+									</logic:equal>
+									<th>Apr</th>
+									<th>May</th>
+									<th>June</th>
+									<th>July</th>
+									<th>Aug</th>
+									<th>Sep</th>
+									<th>Oct</th>
+									<th>Nov</th>
+									<th>Dec</th>
+									<th>Jan</th>
+									<th>Feb</th>
+									<th>Mar</th>
+									<th>Total</th>
+								</tr>
+							</thead>
+							<tbody>
+								<%
+									int i = 1;
+								%>
+								<logic:iterate id="list" name="dataList">
+									<logic:equal name="list" property="name" value="GRAND TOTAL">
+										<tr>
+											<td colspan="2">
+												<bean:write name="list" property="name" />
+											</td>
+											<td><bean:write
+													name="list" property="aprTotal" /></td>
+											<td><bean:write
+													name="list" property="mayTotal" /></td>
+											<td><bean:write
+													name="list" property="juneTotal" /></td>
+											<td><bean:write
+													name="list" property="julyTotal" /></td>
+											<td><bean:write
+													name="list" property="augTotal" /></td>
+											<td><bean:write
+													name="list" property="sepTotal" /></td>
+											<td><bean:write
+													name="list" property="octTotal" /></td>
+											<td><bean:write
+													name="list" property="novTotal" /></td>
+											<td><bean:write
+													name="list" property="decTotal" /></td>
+											<td><bean:write
+													name="list" property="janTotal" /></td>
+											<td><bean:write
+													name="list" property="febTotal" /></td>
+											<td><bean:write
+													name="list" property="marchTotal" /></td>
+											<td><b><bean:write
+														name="list" property="totalCount" /></b></td>
+
+										</tr>
+									</logic:equal>
+
+									<logic:notEqual name="list" property="name" value="GRAND TOTAL">
+
+										<tr>
+											<td><%=i++%></td>
+											<logic:equal name="level" value="state">
+												<logic:equal name="list" property="totalCount" value="0">
+													<td><bean:write
+															name="list" property="districtName" /></td>
+												</logic:equal>
+												<logic:notEqual name="list" property="totalCount" value="0">
+													<td>
+														<a
+														href="discontinueRecords.do?method=showDrillDiscontinueDetails&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>"><bean:write
+																name="list" property="districtName" /></a>
+													</td>
+												</logic:notEqual>
+											</logic:equal>
+
+											<logic:equal name="level" value="district">
+												<logic:equal name="list" property="totalCount" value="0">
+													<td><bean:write
+															name="list" property="subdistrictName" />&nbsp;-<bean:write
+															name="list" property="ruranUrban" /></td>
+												</logic:equal>
+												<logic:notEqual name="list" property="totalCount" value="0">
+													<td>
+														<a
+														href="discontinueRecords.do?method=showDrillDiscontinueDetails&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>"><bean:write
+																name="list" property="subdistrictName" />&nbsp;-<bean:write
+																name="list" property="ruranUrban" /></a>
+													</td>
+												</logic:notEqual>
+											</logic:equal>
+											<logic:equal name="level" value="subdistrict">
+												<td><bean:write
+														name="list" property="grampanchayatName" /></td>
+
+											</logic:equal>
+											<logic:equal name="list" property="totalCount" value="0">
+												<td><bean:write
+														name="list" property="aprTotal" /></td>
+												<td><bean:write
+														name="list" property="mayTotal" /></td>
+												<td><bean:write
+														name="list" property="juneTotal" /></td>
+												<td><bean:write
+														name="list" property="julyTotal" /></td>
+												<td><bean:write
+														name="list" property="augTotal" /></td>
+												<td><bean:write
+														name="list" property="sepTotal" /></td>
+												<td><bean:write
+														name="list" property="octTotal" /></td>
+												<td><bean:write
+														name="list" property="novTotal" /></td>
+												<td><bean:write
+														name="list" property="decTotal" /></td>
+												<td><bean:write
+														name="list" property="janTotal" /></td>
+												<td><bean:write
+														name="list" property="febTotal" /></td>
+												<td><bean:write
+														name="list" property="marchTotal" /></td>
+												<td><b><bean:write
+															name="list" property="totalCount" /></b></td>
+											</logic:equal>
+
+											<logic:notEqual name="list" property="totalCount" value="0">
+
+												<td>
+													<logic:equal name="list" property="aprTotal" value="0">
+														<bean:write name="list" property="aprTotal" />
+													</logic:equal> <logic:notEqual name="list" property="aprTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=4">
+																<font color="red"><bean:write name="list"
+																		property="aprTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=4">
+																<font color="red"><bean:write name="list"
+																		property="aprTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=4">
+																<font color="red"><bean:write name="list"
+																		property="aprTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+												<td>
+													<logic:equal name="list" property="mayTotal" value="0">
+														<bean:write name="list" property="mayTotal" />
+													</logic:equal> <logic:notEqual name="list" property="mayTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=5">
+																<font color="red"><bean:write name="list"
+																		property="mayTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=5">
+																<font color="red"><bean:write name="list"
+																		property="mayTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=5">
+																<font color="red"><bean:write name="list"
+																		property="mayTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+												<td>
+													<logic:equal name="list" property="juneTotal" value="0">
+														<bean:write name="list" property="juneTotal" />
+													</logic:equal> <logic:notEqual name="list" property="juneTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=6">
+																<font color="red"><bean:write name="list"
+																		property="juneTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=6">
+																<font color="red"><bean:write name="list"
+																		property="juneTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=6">
+																<font color="red"><bean:write name="list"
+																		property="juneTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="julyTotal" value="0">
+														<bean:write name="list" property="julyTotal" />
+													</logic:equal> <logic:notEqual name="list" property="julyTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=7">
+																<font color="red"><bean:write name="list"
+																		property="julyTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=7">
+																<font color="red"><bean:write name="list"
+																		property="julyTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=7">
+																<font color="red"><bean:write name="list"
+																		property="julyTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="augTotal" value="0">
+														<bean:write name="list" property="augTotal" />
+													</logic:equal> <logic:notEqual name="list" property="augTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=8">
+																<font color="red"><bean:write name="list"
+																		property="augTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=8">
+																<font color="red"><bean:write name="list"
+																		property="augTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=8">
+																<font color="red"><bean:write name="list"
+																		property="augTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="sepTotal" value="0">
+														<bean:write name="list" property="sepTotal" />
+													</logic:equal> <logic:notEqual name="list" property="sepTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=9">
+																<font color="red"><bean:write name="list"
+																		property="sepTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=9">
+																<font color="red"><bean:write name="list"
+																		property="sepTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=9">
+																<font color="red"><bean:write name="list"
+																		property="sepTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="octTotal" value="0">
+														<bean:write name="list" property="octTotal" />
+													</logic:equal> <logic:notEqual name="list" property="octTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=10">
+																<font color="red"><bean:write name="list"
+																		property="octTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=10">
+																<font color="red"><bean:write name="list"
+																		property="octTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=10">
+																<font color="red"><bean:write name="list"
+																		property="octTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="novTotal" value="0">
+														<bean:write name="list" property="novTotal" />
+													</logic:equal> <logic:notEqual name="list" property="novTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=11">
+																<font color="red"><bean:write name="list"
+																		property="novTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=11">
+																<font color="red"><bean:write name="list"
+																		property="novTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=11">
+																<font color="red"><bean:write name="list"
+																		property="novTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="decTotal" value="0">
+														<bean:write name="list" property="decTotal" />
+													</logic:equal> <logic:notEqual name="list" property="decTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=12">
+																<font color="red"><bean:write name="list"
+																		property="decTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=12">
+																<font color="red"><bean:write name="list"
+																		property="decTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=12">
+																<font color="red"><bean:write name="list"
+																		property="decTotal" /></font>
+															</a>
+														</logic:equal>
+
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="janTotal" value="0">
+														<bean:write name="list" property="janTotal" />
+													</logic:equal> <logic:notEqual name="list" property="janTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=1">
+																<font color="red"><bean:write name="list"
+																		property="janTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=1">
+																<font color="red"><bean:write name="list"
+																		property="janTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=1">
+																<font color="red"><bean:write name="list"
+																		property="janTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="febTotal" value="0">
+														<bean:write name="list" property="febTotal" />
+													</logic:equal> <logic:notEqual name="list" property="febTotal" value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=2">
+																<font color="red"><bean:write name="list"
+																		property="febTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=2">
+																<font color="red"><bean:write name="list"
+																		property="febTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=2">
+																<font color="red"><bean:write name="list"
+																		property="febTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td>
+													<logic:equal name="list" property="marchTotal" value="0">
+														<bean:write name="list" property="marchTotal" />
+													</logic:equal> <logic:notEqual name="list" property="marchTotal"
+														value="0">
+														<logic:equal name="level" value="state">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="list" property="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&grampanchayat=0&area=<bean:write name="area"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="list" property="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=3">
+																<font color="red"><bean:write name="list"
+																		property="marchTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="district">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="list" property="subDistrictMunicipalCode"/>&area=<bean:write name="area"/>&grampanchayat=0&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="list" property="subdistrictName"/>&grampanchayatName=0&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=3">
+																<font color="red"><bean:write name="list"
+																		property="marchTotal" /></font>
+															</a>
+														</logic:equal>
+														<logic:equal name="level" value="subdistrict">
+															<a
+																href="discontinueRecords.do?method=showBeneficiaryData&stateCode=<bean:write name="stateCode"/>&districtCode=<bean:write name="districtCode"/>&subdistrictCode=<bean:write name="subdistrictCode"/>&area=<bean:write name="area"/>&grampanchayat=<bean:write name="list" property="grampanchayatCode"/>&stateName=<bean:write name="stateName"/>&districtName=<bean:write name="districtName"/>&subdistrictName=<bean:write name="subdistrictName"/>&grampanchayatName=<bean:write name="list" property="grampanchayatName"/>&finyear=<bean:write name="finyear"/>&fromYear=<bean:write name="fromYear"/>&toYear=<bean:write name="toYear"/>&status=<bean:write name="status"/>&month=3">
+																<font color="red"><bean:write name="list"
+																		property="marchTotal" /></font>
+															</a>
+														</logic:equal>
+													</logic:notEqual>
+												</td>
+
+												<td><b><bean:write
+															name="list" property="totalCount" /></b></td>
+
+											</logic:notEqual>
+										</tr>
+									</logic:notEqual>
+								</logic:iterate>
+							</tbody>
+						</table>
+						</div>
+						<div class="card-footer text-center py-0">
+                       <input type="button" class="btn btn-primary blue-gradient z-depth-1a waves-effect waves-light" value="Back" onclick="location.href='home.do'" />
+			</div>
+						</div>
+				</logic:present>
+				<logic:present name="benList">
+				<table align="center">
+	<tr>
+	<logic:equal name="level" value="state">
+	<td align="center"><font color="black"><bean:write name="stateName"/></font></td>
+	</logic:equal>
+	<logic:equal name="level" value="district">
+	<td align="center"><font color="black"><bean:write name="stateName"/>&nbsp;-><bean:write name="districtName"/></font></td>
+	</logic:equal>
+	<logic:equal name="level" value="subdistrict">
+	<td align="center"><font color="black"><bean:write name="stateName"/>&nbsp;-><bean:write name="districtName"/>&nbsp;-><bean:write name="subdistrictName"/></font></td>
+	</logic:equal>
+	</tr>
+	<tr><td align="center"><font color="black">SCHEME&nbsp;<bean:write name="fromScheme"/></font></td></tr>
+	<tr><td align="center"><font color="black">FINANCIAL YEAR&nbsp;:&nbsp;<bean:write name="finyear"/></font></td></tr>
+	<tr><td align="center"><font color="black">MONTH&nbsp;:&nbsp;<bean:write name="monthName"/></font></td></tr>
+	</table>
+	
+	<div align="right" style="margin-right: 70px;"><br><a href=<bean:write name="back"/>>Back</a>&nbsp;&nbsp;
+	 <a href="javascript:doNothing()" onclick="downloadData('<bean:write name="downloadData"/>')">Download Excel</a> 
+	<%-- <a href="'<bean:write name="downloadData"/>'" >Download Excel</a> --%>
+	
+	
+	
+	</td>
+	
+	
+	
+	
+	</div>
+				<% int i=1; %>
+				<div class="card">
+				<div class="card-body">
+					<table id="searchDataTable" class="table table-striped">
+						<thead>
+								<tr>
+									<th>S.No.</th>
+									<logic:equal name="level" value="state">
+										<th>District</th>
+									</logic:equal>
+									<logic:equal name="level" value="district">
+										<th>Subdistrict</th>
+									</logic:equal>
+									<logic:equal name="level" value="subdistrict">
+										<th>Grampanchayat/<br />Ward
+										</th>
+									</logic:equal>
+									<th>Sanction <br />Order
+									</th>
+									<th>Applicant Name</th>
+									<th>Father/<br />Husband Name
+									</th>
+									<th>Age&nbsp;Sex</th>
+									<th>Sanction Date</th>
+									<th>Gender</th>
+									<logic:equal name="status" value="DISCONTINUED">
+											<th>Discontinue<br/>Reason</th>
+									</logic:equal>
+
+									<logic:equal name="status" value="APPEALED">
+											<th>Appeal<br/>Discription</th>
+									</logic:equal>
+
+									<logic:equal name="status" value="REJECTED">
+											<th>Rejection<br/>Reason</th>
+									</logic:equal>
+
+									<logic:equal name="status" value="DISCONTINUED">
+											<th>Discontinue<br/>Date</th>
+									</logic:equal>
+									<logic:equal name="status" value="APPEALED">
+											<th>Appeal<br/>Date</th>
+									</logic:equal>
+
+									<logic:equal name="status" value="REJECTED">
+											<th>Rejection<br/>Date</th>
+									</logic:equal>
+
+									<logic:equal name="status" value="APPEALED">
+											<th>Appeal No.</th>
+											<th>Type</th>
+									</logic:equal>
+								</tr>
+							</thead>
+						<tbody>
+						<logic:iterate id="List" name="benList">
+						<tr>
+						   <td><%= i++%></td>
+						 
+						  			<logic:equal name="level" value="state">
+ 									<td><bean:write name="List" property="districtName" /></td>									
+ 									</logic:equal>
+									<logic:equal name="level" value="district">
+										<td><bean:write name="List" property="subdistrictName" /></td>
+									</logic:equal>
+									<logic:equal name="level" value="subdistrict">
+										<td><bean:write name="List" property="grampanchayatName" /></td>
+									</logic:equal>
+									<td><bean:write name="List" property="sanctioOrderNo" /></td>
+									<td><bean:write name="List" property="applicantName" /></td>
+									<td><bean:write name="List" property="fatherHusName" /></td>
+									<td><bean:write name="List" property="age" /></td>
+									<td><bean:write name="List" property="sanctionDate" /></td>
+									<td><bean:write name="List" property="gender" /></td>
+									<logic:equal name="status" value="DISCONTINUED">
+											<td><bean:write name="List" property="discontinueRemark" /></td>
+									</logic:equal>
+
+									<logic:equal name="status" value="APPEALED">
+											<td><bean:write name="List" property="discontinueRemark" /></td>
+									</logic:equal>
+
+									<logic:equal name="status" value="REJECTED">
+											<td><bean:write name="List" property="rejectRemark" /></td>
+									</logic:equal>
+
+									<logic:equal name="status" value="DISCONTINUED">
+											<td><bean:write name="List" property="selectDate" /></td>
+									</logic:equal>
+									<logic:equal name="status" value="APPEALED">
+											<td><bean:write name="List" property="selectDate" /></td>
+									</logic:equal>
+
+									<logic:equal name="status" value="REJECTED">
+											<td><bean:write name="List" property="selectDate" /></td>
+									</logic:equal>
+
+									<logic:equal name="status" value="APPEALED">
+											<td><bean:write name="List" property="appealNo" /></td>
+											<td><bean:write name="List" property="appealType" /></td>
+									</logic:equal>
+						  </tr>
+						</logic:iterate>
+						</tbody>
+						</table>
+						</div>
+				</div>
+				</logic:present>
+				</section>
+	
+	
+	<%-- <logic:present name="benList">
+	
+	
+	<% int i=1; %>
+	
+	
+	
+	<display:table name="benList" pagesize="20" scope="session" width="820px"  border="1" align="center" cellpadding="0" cellspacing="0"  requestURI="" class="dataTable1">
+				
+	<display:column  sortable="false"  align="center" title="S.No."><%= i++%></display:column>
+	 
+	<logic:equal name="level" value="state">
+	<display:column sortable="true" property="districtName"  class="labelfont" title="District"></display:column>	
+	
+	</logic:equal>
+	<logic:equal name="level" value="district">
+	<display:column sortable="true" property="subdistrictName" class="labelfont" title="Subdistrict"></display:column>
+	
+	</logic:equal>
+	<logic:equal name="level" value="subdistrict">
+	<display:column sortable="true" property="grampanchayatName"  class="labelfont" title="Grampanchayat/<br/>Ward"></display:column>
+	
+	</logic:equal>
+	<display:column sortable="true" property="sanctioOrderNo"  class="labelfont" title="Sanction <br/>Order"></display:column>
+	<display:column sortable="true" property="applicantName" class="labelfont" title="Applicant Name"></display:column>
+	<display:column sortable="true" property="fatherHusName" class="labelfont" title="Father/<br/>Husband Name"></display:column>
+	<display:column sortable="true" property="age" align="left"  title="Age&nbsp;Sex"></display:column>
+	<display:column sortable="true" property="sanctionDate" align="left"  title="Sanction Date"></display:column>
+	<display:column sortable="true" property="gender" align="left" class="labelfont" title="Gender"></display:column>
+	  
+	<logic:equal name="status" value="DISCONTINUED">
+	<display:column sortable="true" property="discontinueRemark" align="left" class="labelfont" title="Discontinue<br/>Reason"></display:column>
+	</logic:equal>
+	  
+	<logic:equal name="status" value="APPEALED">
+	<display:column sortable="true" property="discontinueRemark" align="left" class="labelfont" title="Appeal<br/>Discription"></display:column>
+	</logic:equal>
+	  
+	 <logic:equal name="status" value="REJECTED">
+	 <display:column sortable="true" property="rejectRemark" align="left" class="labelfont" title="Rejection<br/>Reason"></display:column>
+	 </logic:equal>
+	  
+	 <logic:equal name="status" value="DISCONTINUED">
+	 <display:column sortable="true" property="selectDate" align="left" class="labelfont" title="Discontinue<br/>Date"></display:column>
+	 </logic:equal>
+	 <logic:equal name="status" value="APPEALED">
+	 <display:column sortable="true" property="selectDate" align="left" class="labelfont" title="Appeal<br/>Date"></display:column>
+	 </logic:equal>
+	
+	 <logic:equal name="status" value="REJECTED">
+	 <display:column sortable="true" property="selectDate" align="left" class="labelfont" title="Rejection<br/>Date"></display:column>
+	 </logic:equal>
+	
+	  <logic:equal name="status" value="APPEALED">
+	  <display:column sortable="true" property="appealNo" align="left" class="labelfont" title="Appeal No."></display:column>
+	  <display:column sortable="true" property="appealType" align="left" class="labelfont" title="Type"></display:column>
+	  </logic:equal>
+
+	</display:table>
+	<table align="center">
+	<tr>
+	<td><a href=<bean:write name="back"/>><html:button property="close" title="Close Window">Back</html:button></a></td>
+	<td><a href="javascript:doNothing()" onclick="downloadData('<bean:write name="downloadData"/>')"><html:button property="">Download Excel</html:button></a></td>
+	</tr></table>
+	</logic:present> --%>
+</body>
+</html:form>
+<script type="text/javascript">
+   /*  function addCustomeAtribute() {
+        document.forms[0].stateCode.setAttribute("searchable","Search here..");
+        document.forms[0].districtCode.setAttribute("searchable","Search here..");
+        document.forms[0].area.setAttribute("searchable","Search here..");
+        document.forms[0].subDistrictMunicipalCode.setAttribute("searchable","Search here..");
+        document.forms[0].yearCode.setAttribute("searchable","Search here..");
+        document.forms[0].typeCode.setAttribute("searchable","Search here..");
+       
+    } */
+       $(document).ready(function () {
+    	//   addCustomeAtribute();
+           $('.mdb-select').materialSelect();
+           // $('#searchDataTable').DataTable();
+           /* setTimeout(function(){
+            dataTableInitilize('#searchDataTable');
+           	}, 1000); */
+           }); 
+    </script>

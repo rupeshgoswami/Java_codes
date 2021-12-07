@@ -1,0 +1,1439 @@
+
+<%@page pageEncoding="UTF-8"%>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html"%>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean"%>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic"%>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+
+<link rel="stylesheet" href="/exportjs/css/doubleclick.css" />
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	isELIgnored="false"%>
+<!-- <script  src="js/customValidations.js" type="text/javascript"></script>
+
+<script src="js/jquery-1.10.2.js"></script>
+<script src="js/jquery-ui.js"></script>
+<script type="text/javascript" src="jquery.js"></script>
+ -->
+<script type="text/javascript">
+
+function editAccNo(rowno)
+{
+	//alert(rowno);
+	
+	 $.ajax({
+	      url: "pfmsCorrectionPensioner.do?method=showUid&flag=bank",
+	      type: 'POST',
+	      data: { 
+	    	
+	    	  sanctionOrderNo:document.getElementById("index["+rowno+"].sanctionOrderNo").value.trim(),
+	    	  },
+	      success: function(response){
+	    	    	var accNo=prompt('Please Enter your account no',response);
+	    	    	//alert(accNo);
+	    	     var regEx = new RegExp('^\\d+$');
+	    	    if(accNo!="" && accNo!=null){
+	    		    if((!accNo.match(regEx) || accNo.length<5 ) && document.getElementById('index['+rowno+'].disbursementCode').value=="1"){
+	    		    alert("Please enter a valid account");
+	    		    editAccNo(rowno);
+	    		    return false;
+	    	        }else  if(!accNo.match(regEx) && document.getElementById('index['+rowno+'].disbursementCode').value=="2")
+	    	        	{
+	    	        	 alert("Please enter a valid account");
+	    	     	    editAccNo(rowno);
+	    	     	    return false;
+	    	        	}
+	    	        else{
+	    	        	var hiddenAcc=accNo;
+	    	        	MaskaccNo=accNo.replace(/\d(?=\d{4})/g, "X");
+	    	        	//alert('id'+rowno+'maskBankAcc');
+	    	        	document.getElementById('id'+rowno+'maskBankAcc').value=hiddenAcc;
+	    	        	document.getElementById('index['+rowno+'].accountNo').value=MaskaccNo;
+	    	        	
+	    	        	
+	    	        	if(document.getElementById('index['+rowno+'].disbursementCode').value=="1")
+	    	        	checkAccountno(rowno);
+	    	        
+	    	        }
+	    	       
+	    	    } 
+	    	    
+	      },
+	      error: function (request, status, error) {
+	          alert(request.responseText);
+	        }
+	      }); 
+	 
+
+}
+
+</script>
+
+<script>
+function enableDisableAccount(rowno){
+	var selectCtrl = document.getElementById('index['+rowno+'].disbursementCode');
+    var selectedItem = selectCtrl.options[selectCtrl.selectedIndex].value;
+    if(selectedItem != "1" && selectedItem != "2"){
+    	 document.getElementById('index['+rowno+'].accountNo').value = "";
+    	 document.getElementById('index['+rowno+'].accountNo').disabled = true;
+    }
+	
+}
+
+
+function checkDupBankAcc(rowno){
+	
+    var sanc_ord_no = document.getElementById("index["+rowno+"].sanctionOrderNo").value.trim();
+	/* var acc_no    	= document.getElementById("index["+rowno+"].accountNo").value.trim(); */
+	var acc_no    	= document.getElementById("id"+rowno+"maskBankAcc").value.trim();
+	var preAcc		= document.getElementById("index["+rowno+"].previousBankAccountNo").value.trim();
+/*    	alert("sanc_ordno "+sanc_ord_no);
+	alert("acc_no "+acc_no);
+	alert("preAcc "+preAcc); */
+    	 $.ajax({
+   	      url: "pensionerUpdate.do?method=pensionerUpdateDupBankAcc",
+   	      type: 'POST',
+   	      data: { sanc_ord_no:sanc_ord_no,acc_no:acc_no},
+   	      success: function(db_resp){
+   	    	db_resp=db_resp.trim();
+   	    	if(db_resp!=""){
+   	    		alert("This account is already registered with us");
+   	    	/* alert("This account is already registered with sanction order( "+db_resp+" )"); */
+   	    	document.getElementById("index["+rowno+"].accountNo").value=preAcc;
+   	    	document.getElementById("index["+rowno+"].accountNo").value.focus();
+   	    	return false;
+   	    	} 
+   	      },
+	      error: function (request, status, error) {
+	          alert(request.responseText);
+	        }
+	      });
+    	
+    }
+
+
+
+
+function checkAccountno(rowno){
+	 /*  if(document.getElementById("index["+rowno+"].accountNo").value==""){ */
+	  if(document.getElementById("id"+rowno+"maskBankAcc").value.trim()==""){
+		 return true;
+		  
+	  }
+	  else{
+	  //var  bank_type=document.forms[0].bankType.value;
+	  var bank_code=document.getElementById("index["+rowno+"].bankCode").value;
+	  var acc_no_length= document.getElementById("id"+rowno+"maskBankAcc").value.trim().length;
+/* 	  var acc_no_length=document.getElementById("index["+rowno+"].accountNo").value.trim().length; */
+	  var preAcc=document.getElementById("index["+rowno+"].previousBankAccountNo").value.trim();
+	 //alert("bank code "+bank_code+" and account size "+acc_no_length);
+	 // var input_ifsc =$("input[name=ifscCode]").val();
+	    
+	  $.ajax({
+	      url: "pensrL.do?mode=checkAccount",
+	      type: 'POST',
+	      data: {input_len:acc_no_length,bank_code:bank_code},
+	      success: function(db_resp){
+          var subStr_min = db_resp.match("min_(.*)max");
+          var subStr_max = db_resp.match("max_(.*)data");
+          var min_len=subStr_min[1].trim();
+          var max_len=subStr_max[1].trim();
+        
+			//alert("min_len "+min_len);
+			//alert("max_len "+max_len);
+			
+			if(min_len==max_len && min_len!=0 && max_len!=0)
+			{
+          	alert("Your bank account must be of "+min_len+" digits");
+          	document.getElementById("index["+rowno+"].accountNo").value=preAcc;
+          	//document.getElementById("index["+rowno+"].accountNo").focus();
+				return false;
+	     	 }
+			else if(min_len!=max_len){
+				alert("Your bank account must be between "+min_len+" digits and "+max_len+" digits");	
+				document.getElementById("index["+rowno+"].accountNo").value=preAcc;
+				//document.getElementById("index["+rowno+"].accountNo").focus();
+			 	return false;
+			}
+		
+	      },
+	      error: function (request, status, error) {
+	          alert(request.responseText);
+	        }
+	      }); 
+	   checkDupBankAcc(rowno);
+		} 
+	 
+	 
+	}
+
+
+
+function addValueName(val)
+{
+	
+	var name=inputname.replace("applicantName","nameAsPeraadhaar");
+			 
+		name = val.value.toUpperCase().value.replace(/  +/g, ' ');
+	    name = document.getElementById('nameAsPeraadhaar').value.replace(/  +/g, ' ');
+	       
+		
+}
+
+
+
+function checkNameAsPerAadhaar(inputname,i)
+{
+	
+
+	var nameCheck = /^[a-zA-Z ]*$/;
+		 if(document.getElementById(inputname).value == '')
+	        {
+			  alert("Can not be blank");
+			 document.getElementById(inputname).value = document.getElementById('index['+i+'].nameasuid').value;
+			 /* document.getElementById(inputname).value = document.getElementById(inputname).value.replace(/  +/g, ' '); */
+	        }
+		 else{
+		  if(!document.getElementById(inputname).value.match(nameCheck))
+			  {
+			     alert("please enter character only.");
+			     document.getElementById(inputname).value = document.getElementById('index['+i+'].nameasuid').value;
+			     return false;
+			  }else
+				  document.getElementById(inputname).value =document.getElementById(inputname).value.replace(/  +/g, ' ');
+		 }
+	
+}
+
+function checkFatherName(inputname,i)
+{
+
+	var nameCheck = /^[a-zA-Z ]*$/;
+		 if(document.getElementById(inputname).value == '')
+	        {
+			  alert("Can not be blank");
+			 document.getElementById(inputname).value = document.getElementById('index['+i+'].fathername').value;
+			 /* document.getElementById(inputname).value = document.getElementById(inputname).value.replace(/  +/g, ' '); */
+	        }
+		 else{
+		  if(!document.getElementById(inputname).value.match(nameCheck))
+			  {
+			     alert("please enter character only.");
+			     document.getElementById(inputname).value = document.getElementById('index['+i+'].fathername').value;
+			     return false;
+			  }
+		  else
+			  {
+			  
+			    document.getElementById(inputname).value =document.getElementById(inputname).value.replace(/  +/g, ' ');
+			  }
+		 }
+	
+}
+
+function checkMobile(i)
+{
+	 var pattern = /^[1-9]{1}[0-9]{9}$/;
+	 
+	  if(document.getElementById('index['+i+'].eidNo').value != ''){
+	    if(pattern.test(document.getElementById('index['+i+'].eidNo').value)== false)
+	    {
+		   alert("Please enter correct Mobile No.");
+		   document.getElementById('index['+i+'].eidNo').value = ''
+		   return false;
+	    }
+	}
+}
+	
+function checkUID(uid)
+{
+	  
+	 //var name=uid.replace("uid1","applicantName");
+	  var name=uid.replace("uid1","nameAsPeraadhaar");
+	  var hideenuid=uid.replace("uid1","hiduid1");
+	  var uidno=document.getElementById(uid).value;
+	  var appname=document.getElementById(name).value;
+	  var hideenuidno=document.getElementById(hideenuid).value;
+	  //alert(uidno +"gggg"+appname+"  "+hideenuidno);
+	  
+	  if(uidno!="")
+		  {
+		     if(appname=="")
+		    	 {
+		    	     alert("Name as per aadhaar can not be blank");
+		    	     document.getElementById(uid).value = '';
+		    	     return false;
+		    	 }
+		  }
+
+	  	  if(uidno==""){
+	  		 var freezAc=uid.replace("uid1","freezAc");
+        	 document.getElementById(freezAc).value=null;
+		
+	} 
+	  if(appname!="" && uidno!="" && uidno==hideenuidno){
+		  
+		  if(vhCheck(uidno)==false){
+   			alert("please enter correct Aadhaar");
+   			//alert("hii"+uid);
+   			document.getElementById(uid).focus();
+   			return false;
+   			}else{  
+	  $.ajax({
+          url : 'pensr.do?mode=veryfieAadharNo',
+          data : {
+            nameAsPeraadhaar : appname,
+          	uidNo :uidno
+          },
+          success : function(responseText) {
+        	  var k=responseText.split(",")[0];
+           // alert(k);
+            if(k=="y"){
+          	   document.getElementById(uid).style.color="green";
+          	   var freezAc=uid.replace("uid1","freezAc");
+          	   document.getElementById(freezAc).value='Y';
+            }
+             else if(k=="n"){
+            	 var freezAc=uid.replace("uid1","freezAc");
+            	 alert('Check Aadhaar and name as per Aadhaar');
+            	 document.getElementById(freezAc).value='N';
+          	     document.getElementById(uid).style.color="black";
+             }
+             else
+            	 {
+            	 var freezAc=uid.replace("uid1","freezAc");
+            	 document.getElementById(freezAc).value=null;
+            	 }
+          } 
+      }); 
+	  	}
+	  
+} else if (appname!="" && uidno!="" && uidno!=hideenuidno){
+	  		//alert(uidno+".."+hideenuidno);
+	 if(vhCheck(uidno)==false){
+			alert("please enter correct Aadhaar");
+			document.getElementById(uid).focus();
+			return false;
+			}else{ 
+	  		$.ajax({
+                /* url : 'aadhaarConsent.do?method=checkDuplicayUID', */ //pensr.do?mode=checkUidNoExistence
+                 url : 'pensr.do?mode=checkUidNoExistence',	
+                data : {
+                	 nameAsPeraadhaar : appname,
+                   	 uidNo :uidno
+                	
+                },
+                success : function(responseText) {
+                	//alert(responseText);
+                	if(responseText=="found"){
+                 /*  if(responseText=="true") */
+                	  alert("Duplicate! Aadhaar already exist.");
+                	  //alert(uid);
+                	  document.getElementById(uid).value = hideenuidno;
+                	  document.getElementById(uid).focus();
+                	  document.getElementById("freezAc").value=null;
+                	  
+                	  return false;
+                  }else {
+                	  
+                	 
+                	  $.ajax({
+            	            url : 'pensr.do?mode=veryfieAadharNo',
+            	            data : {
+            	            	 nameAsPeraadhaar : appname,
+                               	 uidNo :uidno
+            	            },
+            	            success : function(responseText) {
+            	            	 var k=responseText.split(",")[0];
+            	              if(k=="y"){
+            	            	    
+            	            	  document.getElementById(uid).style.color="green";
+            	             	   var freezAc=uid.replace("uid1","freezAc");
+            	             	   document.getElementById(freezAc).value='Y';
+            	             	   }
+            	              else if(k=="n"){
+            	             	var freezAc=uid.replace("uid1","freezAc");
+            	             	 alert('Check Aadhaar and name as per Aadhaar');
+            	             	 document.getElementById(freezAc).value='N';
+            	           	     document.getElementById(uid).style.color="black";
+            	              }
+            	              else
+            	             	 {
+            	             	 var freezAc=uid.replace("uid1","freezAc");
+            	             	 document.getElementById(freezAc).value=null;
+            	             	 }
+            	            } 
+            	        });
+                 			
+                    }
+                } 
+            });	
+			}
+	  	}
+	  
+	  
+	  
+	  
+	  
+	  
+}
+</script>
+
+<script type="text/javascript">
+
+var y=null;
+var z=null;
+var x=null;
+
+function selectFunc(var1) {
+	if(var1.checked == true) {
+		selectAll();
+	}
+	else {
+		resetSelectAll();
+	}	
+}
+
+function validateuid(inputtxt){
+	if(!checkN(inputtxt.value))
+	{
+		if(inputtxt.value.length!=12){
+			alert('Aadhaar No. should be 12 digit only!');
+			inputtxt.value='';
+			inputtxt.focus();
+	}
+		};
+}
+
+
+
+
+function selectAll()	{
+	var len=document.forms[1].elements.length;
+	var ctr=0;
+	for( i = 0 ; i < len; i++){
+		
+		if ( document.forms[1].elements[i].type == 'checkbox'  )  { 
+			
+					document.forms[1].elements[i].checked= true;	
+		}	
+		
+		
+	}	
+	 return false;
+		
+}
+
+
+function show(rowno)
+    {												
+	 // alert(document.getElementById('index['+rowno+'].previousBankAccountNo'));
+	  var selectCtrl = document.getElementById('index['+rowno+'].disbursementCode');
+      var selectedItem = selectCtrl.options[selectCtrl.selectedIndex].value;
+  	 //  alert(selectedItem);
+  	  //alert('editButton'+rowno);
+  	if(selectedItem == "1")
+	   { 
+	       document.getElementById('index['+rowno+'].ifscCode').value=document.getElementById('index['+rowno+'].previousIfscCode').value;
+	       document.getElementById('index['+rowno+'].accountNo').value = document.getElementById('index['+rowno+'].previousBankAccountNo').value;
+	       document.getElementById('index['+rowno+'].accountNo').style.backgroundColor  = "white";
+	       document.getElementById('index['+rowno+'].accountNo').disabled = false;
+	      // document.getElementById('editButton'+rowno).style.display = "block";
+	   }
+  	   if(selectedItem == "2")
+  		   {
+  		     document.getElementById('index['+rowno+'].ifscCode').value='';
+  		     document.getElementById('index['+rowno+'].accountNo').disabled = false;
+  		    // document.getElementById('editButton'+rowno).style.display = "block";
+  		   }
+  	   
+  	 if(selectedItem == "3" ||  selectedItem == "4")
+   	{ 
+   	
+   	
+   	 document.getElementById('index['+rowno+'].accountNo').value='';
+   	 document.getElementById('index['+rowno+'].ifscCode').value='';
+   	 document.getElementById('index['+rowno+'].accountNo').disabled = true;
+   //	 document.getElementById('editButton'+rowno).style.display = "none";
+        //alert('editButton'+rowno+'id');
+   	}
+  	  
+	}
+
+function resetSelectAll(){
+	var len=document.forms[1].elements.length;
+	var ctr=0;
+	for( var i = 0 ; i < len; i++){
+		if ( document.forms[1].elements[i].type == 'checkbox'  )  { 	
+				document.forms[1].elements[i].checked= false;				
+		}	
+	}	
+	 return false;
+}
+
+ function insertRecords(form)  {
+	 
+		
+		
+		
+	//  Validating checkbox
+		var ctr=0;
+
+	for (var j=0;j<i;j++)
+	{
+		var check= document.getElementById("index["+j+"].select");
+		
+		var gpcode= document.getElementById("index["+j+"].gramPanchayatWardCode");
+		ctr = ctr+1;
+	
+     checkboxCount=parseInt(checkboxCount,10)+1;		
+	}
+	    document.forms[1].action = "pensionerUpdate.do?method=UpdateRec"+"&"+tokenParameter+"="+tokenValue;
+		document.forms[1].submit();
+
+} 
+ 
+ ////////////////////////////////////////
+ ///////////////////////////////////////////
+ function update()
+ {	
+		var i=0;
+	     var len=document.forms[1].elements.length;
+	     var j=<bean:write  name="pensionerUpdateForm"  property="pensionercount"/>;
+	     //console.log(j+"<<J");
+		 var ctr=0;
+		 //var table=$('#searchDataTable').DataTable();   //----line comment by nitesh------
+		/*  table.$('.Deepak').each(function(){
+	        
+			console.log("dis code===> "+$(this).val());
+			
+		}); */
+		 
+		
+		// for(i ; i<j ; i++)
+		//table.$('.bodytr').each(function()	//----line comment by nitesh------
+		$('#searchDataTable .bodytr').each(function()	
+		{
+			
+			
+			//$(this).find("td").eq(0).html();
+		
+			// console.log(i+"<---i"+$(this).find("td").eq(6).find('.Deepak option:selected').val()); //).val());
+			// console.log($('#index['+i+'].disbursementCode'));
+			
+			
+			
+			 var id="index["+i+"].disbursementCode";
+			// console.log("id===>   "+$(this).find("td").eq(9).find("input[type='checkbox']").is(":checked"));
+			// console.log("ye h value==>  "+$("table#searchDataTable "+id).val());
+		//console.log(document.getElementById(id));
+			    var selectCtrl = document.getElementById('index['+i+'].disbursementCode');
+		    	var selectedItem = $(this).find("td").eq(6).find('.Deepak option:selected').val();//selectCtrl.options[selectCtrl.selectedIndex].value;
+		    		
+		    	
+		    	
+	       	if($(this).find("td").eq(9).find("input[type='checkbox']").is(":checked") == true)//document.getElementById('index['+i+'].select').checked == true)
+	       	{
+	       		       		
+	       		//	console.log($(this).find("td").eq(9).find("input[type='checkbox']").is(":checked")+"<<<====<<");
+	       		if(selectedItem == "1")
+	    	   {
+			
+				if($(this).find("td").eq(7).find("input[type='text']").val()=='')
+				{
+					//alert(document.getElementById('index['+i+'].ifscCode').value);
+					alert("please enter account number of selected check box");
+					document.getElementById('index['+i+'].accountNo').focus();
+					return false;
+				}
+				else if($(this).find("td").eq(8).find("input[type='text']").val()=='')
+				{
+				  //alert("byee"+document.getElementById('index['+i+'].accountNo').value);
+				  alert("please enter IFSC Code of selected check box");
+				  document.getElementById('index['+i+'].ifscCode').focus();
+				 return false;
+				 }
+				
+				
+					
+			   }
+	       else if(selectedItem == "2")
+    	   {
+		
+			if($(this).find("td").eq(7).find("input[type='text']").val()=='')
+			{
+				//alert(document.getElementById('index['+i+'].ifscCode').value);
+				alert("please enter post office a/c no. of selected check box");
+				document.getElementById('index['+i+'].accountNo').focus();
+				return false;
+			}
+			else if($(this).find("td").eq(8).find("input[type='text']").val()=='')
+			{
+			  //alert("byee"+document.getElementById('index['+i+'].accountNo').value);
+			  alert("please enter PDA Code of selected check box");
+			  document.getElementById('index['+i+'].ifscCode').focus();
+			 return false;
+			 }
+			
+			
+				
+		   }
+	       if(selectedItem=="3" || selectedItem=="4")
+	    	   {
+	    	   console.log($(this).find("td").eq(8).find("input[type='text']").val()); 
+	    	   if($(this).find("td").eq(8).find("input[type='text']").val() == '')//document.getElementById('index['+i+'].ifscCode').value=='' )
+	    	    	   {
+	    	    	      alert("please enter PDA Code of selected check box");
+	    	    	      document.getElementById('index['+i+'].ifscCode').focus();
+	    	    	      return false;
+	    	    	   }
+	    	   }
+	       
+	 		
+	 	  //return insertRecords(this.form);
+	        
+		   
+	 	   }
+		});
+		
+		
+		for(var i = 0 ; i < len; i++)
+		{
+			
+			//	alert(document.getElementById('index['+i+'].ifscCode').value);
+			if ( document.forms[1].elements[i].type == 'checkbox'  )  
+			{ 
+		    if(document.forms[1].elements[i].checked== true)
+		    {
+		    	 
+		    	
+		      ctr=ctr+1;
+		      
+		      break;
+	     	}
+			}	
+		}
+		
+		if (ctr==0)
+	     {
+		    alert("Please Select One or More Records");
+		    return;
+		 }
+	  
+	   
+	    //	return showValue();
+	   input_box=confirm("Please check and verify.");
+	   if (input_box==true)
+	   {
+		document.forms[1].action = "pensionerUpdate.do?method=UpdateRec"+"&"+tokenParameter+"="+tokenValue;
+		document.forms[1].submit();
+	  // return insertRecords(this.form);
+       return;
+	   }
+		
+	  }
+ function update1()
+ {
+	    var len=document.forms[1].elements.length;
+	   // alert("len : "+len);
+		var ctr=0;
+		for(var i = 0 ; i < len; i++)
+		{
+			if ( document.forms[1].elements[i].type == 'checkbox'  )  
+			{ 
+		    if(document.forms[1].elements[i].checked== true)
+		    {
+		    	//alert(i);
+		    	if(document.getElementById('index['+i+'].ifscCode').value!='' && document.getElementById('index['+i+'].accountNo').value=='')
+				{
+					//alert(document.getElementById('index['+i+'].ifscCode').value);
+					alert("please enter account number");
+					//continue;
+					return false;
+				}
+				if(document.getElementById('index['+i+'].ifscCode').value=='' && document.getElementById('index['+i+'].accountNo').value!='')
+				{
+				  //alert("byee"+document.getElementById('index['+i+'].accountNo').value);
+				  alert("please enter IFSC Code");
+				 // continue;
+				 return false;
+				 }  
+		    ctr=ctr+1;
+		    break;
+	     	}
+			}	
+		}	
+	    if (ctr==0)
+	     {
+		    alert("Please Select One or More Records");
+		    return;
+		 }
+	   input_box=confirm("Please check and verify.");
+	   if (input_box==true)
+	   {
+		document.forms[1].action = "pensionerUpdate.do?method=UpdateRec"+"&"+tokenParameter+"="+tokenValue;
+		document.forms[1].submit();
+	  // return insertRecords(this.form);
+       return;
+	   }
+	   else
+	  {
+
+	  }
+	  }
+
+function specialCharCheck(id){
+	
+	alert(id);
+	var letters = /^[A-Za-z _]+$/;
+		var inputtxt = document.getElementById("searchValue").value;
+		inputtxt=inputtxt.replace(/  +/g, ' ');
+		   if(inputtxt.trim().match(letters))
+		     {
+		      return true;
+		     }
+		   else{
+			   alert("Name cannot have special characters");
+			   document.forms[0].searchValue.focus();
+		     return false;
+		   }
+	
+	
+	
+}
+
+
+function checkN(value)
+{
+	if(value.trim()==""|| value==null)
+		return true;
+	else
+		return false;
+}
+function checknull(value)
+{
+	if(value.trim()==""|| value==null)
+	{		alert("cannot be blank!");
+	      return false;
+}
+	else
+		return true;
+	}
+	function lockSubmit(){
+	
+	var submit = document.getElementById('submit');
+	submit.disabled=true;
+	
+	}
+	 
+	
+	function showIFSC(obj)  
+	 {
+	
+
+if(document.getElementById("index["+obj+"].disbursementCode").value =="1")
+	{
+	  window.open ("getIFSCCode.do?method=showPrintPage&disParam=shownew&param=ident&pda=1&id="+obj+"&stateCode="+document.forms[0].stateCode.value,"Welcome2","dependent=yes,status=1,resizable=1,scrollbars=1");
+	}
+	 
+else
+	  window.open ("getPDA.do?method=showPrintPage2&disParam=show&param=ident&flag=yes&obj="+obj+"&pda="+document.getElementById("index["+obj+"].disbursementCode").value,"Welcome2","dependent=yes,status=1,resizable=1,scrollbars=1");
+
+	 }
+	
+	// this is new coooooooooooooooooddddddddddddddddddddddddeeeeeeeeeeeeeee
+	jQuery.fn.topLink = function(settings) {
+	settings = jQuery.extend({
+		min: 1,
+		fadeSpeed: 200
+	}, settings);
+	return this.each(function() {
+		//listen for scroll
+		var el = $(this);
+		el.hide(); //in case the user forgot
+		$(window).scroll(function() {
+			if($(window).scrollTop() >= settings.min)
+			{
+				el.fadeIn(settings.fadeSpeed);
+			}
+			else
+			{
+				el.fadeOut(settings.fadeSpeed);
+			}
+		});
+	});
+};
+
+//usage w/ smoothscroll
+$(document).ready(function () {
+
+    $(window).scroll(function () {
+        if ($(this).scrollTop() > 100) {
+            $('#top-link').fadeIn();
+        } else {
+            $('#top-link').fadeOut();
+        }
+    });
+
+    $('#top-link').click(function () {
+        $("html, body").animate({
+            scrollTop: 0
+        }, 600);
+        return false;
+    });
+
+});
+
+	
+	function specialCharCheck(){
+ 		
+ 		var letters = /^[A-Za-z _]+$/;
+ 		var inputtxt = document.getElementById("searchValue").value;
+ 		inputtxt=inputtxt.replace(/  +/g, ' ');
+ 		   if(inputtxt.trim().match(letters))
+ 		     {
+ 		      return true;
+ 		     }
+ 		   else{
+ 			   alert("Name cannot have special characters");
+ 			   document.forms[0].searchValue.focus();
+ 		     return false;
+ 		   }
+ 		
+ 	}
+	
+	function checkName(inputname,i)
+	{
+		
+	
+		var nameCheck = /^[a-zA-Z ]*$/;
+		 if(document.getElementById(inputname).value == '')
+	        {
+			  alert("Can not be blank");
+			 document.getElementById(inputname).value = document.getElementById('index['+i+'].appName').value;
+			 /* document.getElementById(inputname).value = document.getElementById(inputname).value.replace(/  +/g, ' '); */
+	        }
+		 else{
+		  if(!document.getElementById(inputname).value.match(nameCheck))
+			  {
+			     alert("please enter character only.");
+			     document.getElementById(inputname).value = document.getElementById('index['+i+'].appName').value;
+			     return false;
+			  }else
+				  document.getElementById(inputname).value =document.getElementById(inputname).value.replace(/  +/g, ' ');
+		 }
+	
+	}
+
+
+	function  validateSearchType1(){
+                    
+		//alert("hi");
+		var pattern2=/^([^A-Za-z_]+)$/;// to check special symbol only in beneficiary no. 
+        
+	    	var str= document.forms[0].searchValue.value;
+	   	//	alert(document.forms[0].searchItem.value+"..."+document.forms[0].searchValue.value);
+	         if(document.forms[0].searchItem.value=="Yes" && document.forms[0].searchValue.value==''){
+	            	   alert("please enter sanction order number");return false;
+	    	  }
+	    	 if(document.forms[0].searchItem.value=="No" && document.forms[0].searchValue.value!='' ){
+	    		
+	    		 if(!specialCharCheck()){
+	    			 alert("Only alphabet is allowed");
+	    		 return false;
+	    		 }
+	    	 }
+	    	 if(document.forms[0].searchItem.value=="Yes" && document.forms[0].searchValue.value!='' ){
+	    		 var str='<bean:write  name="stateShortName"/>';
+	    		 var appno =document.forms[0].searchValue.value;
+	    		 if(document.forms[0].searchValue.value.length<10){
+	    			 alert("Please enter correct sanction order number");
+	    			 document.forms[0].searchValue.value='';
+	    			 document.forms[0].searchValue.focus();
+	    			 return false;
+	    		 }else if(appno.trim().substring(0,5)!=str+"-S-"){
+	    			 alert("sanction order number should start from "+str+"-S-");
+	    			 document.forms[0].searchValue.value='';
+	    			 document.forms[0].searchValue.focus();
+	    			 return false;
+	    		 }
+	    	 }
+	    	 if(document.forms[0].searchItem.value=="adhar" && document.forms[0].searchValue.value!='' ){
+	    		 
+	    		 var uid=document.forms[0].searchValue.value;
+	    			//alert(uid);
+	    			
+	    			if(vhCheck(uid)==false){
+	    			alert("please enter correct Aadhaar");
+	    			document.forms[0].searchValue.value="";
+	    			document.forms[0].searchValue.focus();
+	    			return false;
+	    			}
+	    			
+	    	 }
+	    	 if(document.forms[0].searchItem.value=="adhar" && document.forms[0].searchValue.value=='' ){
+	    		 alert("Please enter  Aadhaar");
+	    		 document.forms[0].searchValue.focus();
+	    		 return false;
+	    	 }
+	    	 
+	    	 if(document.forms[0].searchItem.value=="mobile" && document.forms[0].searchValue.value=='' ){
+	    		 alert("Please enter  Mobile No.");
+	    		 document.forms[0].searchValue.focus();
+	    		 return false;
+	    	 }
+	    	 
+	    	 if(document.forms[0].searchItem.value=="mobile" && document.forms[0].searchValue.value!='')
+	    	 {
+	    		 var pattern = /^[1-9]{1}[0-9]{9}$/;
+	    			
+	 		    if(pattern.test(document.forms[0].searchValue.value)== false){
+	 			alert("Please enter correct Mobile No.");
+	 			document.forms[0].searchValue.value="";
+	 			document.forms[0].searchValue.focus();
+	 			return false;
+	    	 }
+	    	 }
+	    	 
+	    	if(document.forms[0].searchItem.value=="beneficiaryNo" && document.forms[0].searchValue.value =='')
+		{
+	    		 alert("Please enter  Beneficiary No.");
+	    		 document.forms[0].searchValue.focus();
+	    		 return false;
+		}
+
+	    	if(document.forms[0].searchItem.value=="beneficiaryNo" && document.forms[0].searchValue.value!='')
+		{
+	    		//alert("indside")
+	    		var searchValue = document.forms[0].searchValue.value;
+	    		
+		     var spclChars = "!@#$%^&*()";
+		    for (var i = 0; i < searchValue.length; i++)
+		    {
+		    if (spclChars.indexOf(searchValue.charAt(i)) != -1)
+		    {
+		        alert ("Special characters are not allowed.");
+		         document.forms[0].searchValue.value='';
+    			 document.forms[0].searchValue.focus();
+		         return false;
+		    }
+		    } 
+		}
+
+	if(document.forms[0].searchItem.value=="No" && document.forms[0].searchValue.value=='' )
+	
+	{
+		 
+	if( document.forms[0].stateCode.value == 0 )
+		{
+			 alert("Please Select State");return ;
+		 }
+	
+if( document.forms[0].districtCode.value == 0 )
+	{
+		alert("Please Select District");return ;
+	} 
+if(document.forms[0].area.value == 0 )
+	{
+	   alert("Please select Area.");
+	   return;
+	}
+
+if( document.forms[0].area.value != 0  && document.forms[0].subDistrictMunicipalCode.value == 0)
+	{
+		alert("Please Select Sub District/Municipal Area");return ;
+	}   		
+}
+
+ 							document.getElementById("fullscreenloader").style.display = 'block';
+ 						document.forms[0].action = "pensionerUpdate.do?method=GetRec"+"&"+tokenParameter+"="+tokenValue;
+   	                    document.forms[0].submit();
+	
+	}
+	
+	function uid1(j)
+	{
+		//alert(j);
+		var uid=document.getElementById("index["+j+"].uid1").value;
+		//alert(uid);
+		if(j!=null)
+		{
+		if(vhCheck(uid)==false){
+		alert("pls enter correct uid number");
+		document.getElementById("index["+j+"].uid1").value="";
+		document.getElementById("index["+j+"].uid1").focus();
+		}
+		}
+		
+}
+	
+	
+	<%-- Pushpendra  validation for UID using verchoeff algorithm--%>
+	function vhCheck(strVal)
+			{
+		       //alert("jii");
+				if (strVal.length < 10) // Minimum length. 
+	                     {
+					
+					return false;
+	                      }
+				if(strVal.verhoeffCheck())
+				{
+					return true;
+				}
+				else
+				{
+					
+					return false;
+				}
+				
+			};
+
+		var Verhoeff = {
+			"d":[[0,1,2,3,4,5,6,7,8,9],
+				[1,2,3,4,0,6,7,8,9,5],
+				[2,3,4,0,1,7,8,9,5,6],
+				[3,4,0,1,2,8,9,5,6,7],
+				[4,0,1,2,3,9,5,6,7,8],
+				[5,9,8,7,6,0,4,3,2,1],
+				[6,5,9,8,7,1,0,4,3,2],
+				[7,6,5,9,8,2,1,0,4,3],
+				[8,7,6,5,9,3,2,1,0,4],
+				[9,8,7,6,5,4,3,2,1,0]],
+			"p":[[0,1,2,3,4,5,6,7,8,9],
+				[1,5,7,6,2,8,3,0,9,4],
+				[5,8,0,3,7,9,6,1,4,2],
+				[8,9,1,6,0,4,3,5,2,7],
+				[9,4,5,3,1,2,6,8,7,0],
+				[4,2,8,6,5,7,3,9,0,1],
+				[2,7,9,3,8,0,6,4,1,5],
+				[7,0,4,6,9,1,3,2,5,8]],
+			"j":[0,4,3,2,1,5,6,7,8,9],
+			"check":function(str)
+			{
+				var c = 0;
+				str.replace(/\D+/g,"").split("").reverse().join("").replace(/[\d]/g, function(u, i, o){
+					c = Verhoeff.d[c][Verhoeff.p[i&7][parseInt(u,10)]];
+				});
+				return (c === 0);
+				
+			},
+			"get":function(str){
+				var c = 0;
+				str.replace(/\D+/g,"").split("").reverse().join("").replace(/[\d]/g, function(u, i, o){
+					c = Verhoeff.d[ c ][ Verhoeff.p[(i+1)&7][parseInt(u,10)] ];
+				});
+				return Verhoeff.j[c];
+			}
+		};
+
+
+		String.prototype.verhoeffCheck = (function()
+		{
+			var d = [[0,1,2,3,4,5,6,7,8,9],
+					[1,2,3,4,0,6,7,8,9,5],
+					[2,3,4,0,1,7,8,9,5,6],
+					[3,4,0,1,2,8,9,5,6,7],
+					[4,0,1,2,3,9,5,6,7,8],
+					[5,9,8,7,6,0,4,3,2,1],
+					[6,5,9,8,7,1,0,4,3,2],
+					[7,6,5,9,8,2,1,0,4,3],
+					[8,7,6,5,9,3,2,1,0,4],
+					[9,8,7,6,5,4,3,2,1,0]];
+			var p = [[0,1,2,3,4,5,6,7,8,9],
+					[1,5,7,6,2,8,3,0,9,4],
+					[5,8,0,3,7,9,6,1,4,2],
+					[8,9,1,6,0,4,3,5,2,7],
+					[9,4,5,3,1,2,6,8,7,0],
+					[4,2,8,6,5,7,3,9,0,1],
+					[2,7,9,3,8,0,6,4,1,5],
+					[7,0,4,6,9,1,3,2,5,8]];
+			var j = [0,4,3,2,1,5,6,7,8,9];
+
+			return function()
+			{
+				var c = 0;
+				this.replace(/\D+/g,"").split("").reverse().join("").replace(/[\d]/g, function(u, i, o){
+					c = d[c][p[i&7][parseInt(u,10)]];
+				});
+				return (c === 0);
+			};
+		})();
+
+		// Verhoeff algorithm producer, by Avraham Plotnitzky. (aviplot at gmail)
+		String.prototype.verhoeffGet = (function()
+		{
+			var d = [[0,1,2,3,4,5,6,7,8,9],
+					[1,2,3,4,0,6,7,8,9,5],
+					[2,3,4,0,1,7,8,9,5,6],
+					[3,4,0,1,2,8,9,5,6,7],
+					[4,0,1,2,3,9,5,6,7,8],
+					[5,9,8,7,6,0,4,3,2,1],
+					[6,5,9,8,7,1,0,4,3,2],
+					[7,6,5,9,8,2,1,0,4,3],
+					[8,7,6,5,9,3,2,1,0,4],
+					[9,8,7,6,5,4,3,2,1,0]];
+			var p = [[0,1,2,3,4,5,6,7,8,9],
+					[1,5,7,6,2,8,3,0,9,4],
+					[5,8,0,3,7,9,6,1,4,2],
+					[8,9,1,6,0,4,3,5,2,7],
+					[9,4,5,3,1,2,6,8,7,0],
+					[4,2,8,6,5,7,3,9,0,1],
+					[2,7,9,3,8,0,6,4,1,5],
+					[7,0,4,6,9,1,3,2,5,8]];
+			var j = [0,4,3,2,1,5,6,7,8,9];
+
+			return function()
+			{
+				var c = 0;
+				this.replace(/\D+/g,"").split("").reverse().join("").replace(/[\d]/g, function(u, i, o){
+					c = d[c][p[(i+1)&7][parseInt(u,10)]];
+				});
+				return j[c];
+			};
+		})();
+	
+	</script>
+
+
+<section>
+	<h2 class="primary-heading">
+
+		<span class="badge badge-primary">Verification - Pensioner's
+			Detail Updation</span>
+	</h2>
+	<logic:present name="ErrorMsg">
+		<center>
+			<bean:write name="ErrorMsg" />
+		</center>
+	</logic:present>
+
+	<div class="card mb-3">
+		<div class="card-body pb-2">
+			<html:form action="/login/pensionerUpdate">
+				<html:hidden property="searchType" />
+				<!--Grid row-->
+				<div class="row">
+					<%@ include file="/WEB-INF/pages/common/CommonVilllage.jsp"%>
+				</div>
+
+				<div class="blue lighten-5 text-center my-1">
+					<span class="badge badge-primary" style="font-size: 1rem;">OR
+						Search By</span>
+				</div>
+
+
+				<!--Grid row-->
+				<div class="row">
+					<!--Grid column-->
+					<div class="col-lg-9 col-md-7">
+						<div class="md-form">
+							<label for="" class="active w-100 py-0">Search By <span
+								class="text-danger font-weight-500">*</span></label>
+							<!-- Material inline 1 -->
+							<div class="form-check form-check-inline">
+								<html:radio styleId="appName" property="searchItem" value="No"
+									styleClass="form-check-input" />
+								<label class="form-check-label" for="appName"><bean:message
+										key="pensr.applicantname" /></label>
+							</div>
+							<!-- Material inline 2 -->
+							<div class="form-check form-check-inline">
+								<html:radio styleId="appNo" property="searchItem" value="Yes"
+									styleClass="form-check-input" />
+								<label class="form-check-label" for="appNo">Sanction
+									Order No. </label>
+							</div>
+							<!-- Material inline 3 -->
+							<div class="form-check form-check-inline">
+								<html:radio styleId="ben" property="searchItem"
+									value="beneficiaryNo" styleClass="form-check-input" />
+								<label class="form-check-label" for="ben"><bean:message
+										key="pensr.beneficiaryNo" /> </label>
+							</div>
+							<!-- Material inline 4 -->
+							<div class="form-check form-check-inline">
+								<html:radio styleId="aadhaarNo" property="searchItem"
+									value="adhaar" styleClass="form-check-input" />
+								<label class="form-check-label" for="aadhaarNo">Aadhaar</label>
+							</div>
+							<!-- Material inline 5 -->
+							<div class="form-check form-check-inline">
+								<html:radio styleId="mobile" property="searchItem"
+									value="mobile" styleClass="form-check-input" />
+								<label class="form-check-label" for="mobile">Mobile No.</label>
+							</div>
+						</div>
+					</div>
+					<!--Grid column-->
+					<div class="col-lg-3 col-md-6">
+						<div class="md-form">
+							<html:text styleClass="form-control" property="searchValue"
+								onblur="this.value=this.value.toUpperCase();" maxlength="30"
+								styleId="searchValue" />
+							<label for="searchValue" class="form-check-label"><bean:message
+									key="pensr.search.enter" /></label>
+						</div>
+					</div>
+
+
+				</div>
+
+				<div class="card-footer text-center py-0">
+					<html:button property="Searchfreez"
+						styleClass="btn btn-primary blue-gradient z-depth-1a waves-effect waves-light"
+						onclick="javascript:validateSearchType1()">
+						<bean:message key="button.submit.label" />
+					</html:button>
+					<html:button property="cancel" styleClass="btn btn-outline-primary"
+						onclick="window.location.href='home.do'">
+						<bean:message key="state.cancel.label" />
+					</html:button>
+				</div>
+
+
+			</html:form>
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-body">
+			<html:form action="/login/pensionerUpdate">
+				<logic:present name="getrecord">
+
+					<div class="note note-info">
+						Records for scheme : <span class="badge badge-info"><bean:write
+								name="scheme" /> </span>
+
+					</div>
+
+					<table id="searchDataTable" class="table table-striped">
+						<thead>
+							<tr>
+								<th>Ppo No./San.No.
+								</th>
+								<logic:equal name="state" value="24">
+									<th>State Scheme <br>ID
+									</th>
+								</logic:equal>
+								<th><bean:message key="pensr.applicantname" /></th>
+								<th><bean:message key="pensr.husbandfathername" /></th>
+								<th>Gen/<bean:message key="pensr.age" /></th>
+								<th>contact No.</th>
+								<th>Current Pymt Mode</th>
+								<th>Account No.</th>
+								<th>IFSC/PDA Code</th>
+								<th>
+								    <input class="form-check-input"  type="checkbox" id="t1" onclick='selectFunc(this)'>
+								    <label class="form-check-label" for="t1">Check All</label>
+                                </th>
+							</tr>
+						</thead>
+						<tbody>
+							<%
+								int cnt = 0;   
+							%>
+							<logic:iterate name="pensionerUpdateForm"
+								property="pensionerlist" id="index" indexId="itr">
+								<html:text style="display:none" name="index"
+									styleId="index[${itr}].previousApplicantName"
+									property="previousApplicantName" />
+								<html:text style="display:none" name="index"
+									styleId="index[${itr}].previousAadharNo"
+									property="previousAadharNo" />
+								<html:text style="display:none" name="index"
+									styleId="index[${itr}].previousIfscCode"
+									property="previousIfscCode" />
+								<%-- <html:hidden name="index"
+									styleId="index[${itr}].previousBankAccountNo"
+									property="previousBankAccountNo" />
+								 --%>
+								 
+										<html:text style="display:none" name="index"
+									styleId="index[${itr}].previousBankAccountNo"
+									property="previousBankAccountNo" />
+								
+										
+								 <tr class="bodytr">
+									<td><bean:write name="index" property="sanctionOrderNo" /></td>
+									<html:hidden name="index" styleClass="nsapsancordno"
+										styleId="index[${itr}].sanctionOrderNo"
+										property="sanctionOrderNo" indexed="true" />
+									<logic:equal name="state" value="24">
+										<td><bean:write name="index" property="beneficiaryNo" /></td>
+									</logic:equal>
+
+									<td><html:text styleClass="form-control" name="index" styleId="index[${itr}].applicantName" property="applicantName" indexed="true" /> </td>
+									<logic:equal name="index" property="freez" value="Y">
+										<td>
+											<p style="margin-top: 0; margin-bottom: 0">
+
+												<html:text styleClass="form-control" name="index"
+													styleId="index[${itr}].fatherHusbandName"
+													property="fatherHusbandName" indexed="true" />
+										</td>
+									</logic:equal>
+									<html:hidden name="index" styleId="index[${itr}].appName"
+										property="applicantName" />
+									<logic:notEqual name="index" property="freez" value="Y">
+
+
+
+										<td>
+											<p style="margin-top: 0; margin-bottom: 0">
+
+												<html:text styleClass="form-control" name="index"
+													styleId="index[${itr}].fatherHusbandName" 
+													property="fatherHusbandName" indexed="true"
+													onblur="checkFatherName(this.id , ${itr});this.value=this.value.toUpperCase();" />
+										</td>
+									</logic:notEqual>
+
+									<html:hidden name="index" property="gramPanchayatWardCode"
+										indexed="true" />
+
+
+									<html:hidden name="index" property="fatherHusbandName"
+										styleId="index[${itr}].fathername" />
+
+									<td><bean:write name="index" property="gender" /> / <bean:write
+											name="index" property="age" /></td>
+
+
+
+									<td><html:text styleClass="form-control" name="index" styleId="index[${itr}].eidNo"
+											 maxlength="10" property="eidNo"
+											onblur="checkMobile(${itr})" indexed="true" /></td>
+
+									<td>
+									
+									<html:select name="index" styleClass="Deepak mdb-select md-form colorful-select"
+											styleId="index[${itr}].disbursementCode"
+											property="disbursementCode" onchange="show(${itr})"
+											indexed="true">
+
+											<html:option value="1">Bank</html:option>
+											<html:option value="2">PO</html:option>
+											<html:option value="3">MO</html:option>
+											<html:option value="4">Cash</html:option>
+
+										</html:select></td>
+										
+
+									<logic:equal name="index" property="disbursementCode" value="1">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												indexed="true" readonly="true" /> &nbsp;&nbsp;</td>
+									</logic:equal>
+									<logic:equal name="index" property="disbursementCode" value="2">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												indexed="true" readonly="true" /> &nbsp;&nbsp;</td>
+									</logic:equal>
+									<logic:equal name="index" property="disbursementCode" value="3">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												disabled="true" indexed="true" readonly="true" />
+											&nbsp;&nbsp;</td>
+									</logic:equal>
+									<logic:equal name="index" property="disbursementCode" value="4">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												disabled="true" indexed="true" readonly="true" />
+											&nbsp;&nbsp;</td>
+									</logic:equal>
+
+									<html:hidden name="index" property="maskBankAcc"
+										styleId="id${itr}maskBankAcc" indexed="true" />
+
+
+									<td><html:text  name="index"
+											styleId="index[${itr}].ifscCode" readonly="true" 
+											maxlength="11" property="ifscCode" indexed="true"
+											styleClass="form-control" /> <a href="javascript:doNothing()"
+										    onClick="showIFSC(<%=cnt%>)"> <img
+											src="images/search.jpeg" border=0 width="17" height="15"></a>
+										<html:hidden name="index" styleId="index[${itr}].branchName"
+											property="branchName" /> <html:hidden name="index"
+											styleId="index[${itr}].bankType" property="bankType"
+											indexed="true" /> <html:hidden name="index"
+											styleId="index[${itr}].branchCode" property="branchCode"
+											indexed="true" /> <html:hidden name="index"
+											styleId="index[${itr}].bankCode" property="bankCode"
+											indexed="true" /></td>
+
+									<td><html:checkbox name="index"
+											styleId="index[${itr}].select" property="select" styleClass="checkbx form-check-input"
+											indexed="true"  titleKey="anFreez.check.hint" />
+											<label class="form-check-label" for="index[${itr}].select"></label>
+									 </td>
+									<%
+										cnt++;
+									%>
+								</tr>
+							</logic:iterate>
+
+						</tbody>
+					</table>
+
+
+				</logic:present>
+			</html:form>
+		</div>
+		       <logic:present name="getrecord">
+		         <div class="card-footer text-center py-0">
+					<html:button property="Searchfreez"
+						styleClass="btn btn-primary blue-gradient z-depth-1a waves-effect waves-light"
+						onclick="javascript:update()">
+						Update
+					</html:button>
+					<html:button property="cancel" styleClass="btn btn-outline-primary"
+						onclick="window.location.href='pensionerUpdate.do?method=pensionerInitialize'">
+						Back
+					</html:button>
+				</div>
+		       </logic:present>  
+		
+	</div>
+</section>
+
+
+
+
+
+<html:form action="/login/pensionerUpdate">
+
+	<div class="loading" id="fullscreenloader" style="display: none;"></div>
+</html:form>
+
+<!-- Initializations -->
+
+
+<script type="text/javascript">
+	function addCustomeAtribute() {
+		document.forms[0].stateCode.setAttribute("searchable", "Search here..");
+		document.forms[0].districtCode.setAttribute("searchable",
+				"Search here..");
+		document.forms[0].subDistrictMunicipalCode.setAttribute("searchable",
+				"Search here..");
+		document.forms[0].gramPanchayatWardCode.setAttribute("searchable",
+				"Search here..");
+
+	}
+
+	$(document).ready(function() {
+		addCustomeAtribute();
+	    $('.mdb-select').materialSelect();
+	  //---code comment by nitesh start-----------
+	     /* $('#searchDataTable').DataTable();
+ 		setTimeout(function(){
+	    	dataTableInitilize('#searchDataTable');
+	    	}, 500); */   
+	  //---code comment by nitesh end-----------
+	    
+	});
+</script>
+

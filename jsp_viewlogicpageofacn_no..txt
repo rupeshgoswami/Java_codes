@@ -1,0 +1,48 @@
+                               pensioner_detail_updt.jsp 
+
+
+                                               <logic:equal name="index" property="disbursementCode" value="1">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												indexed="true" readonly="true" /> &nbsp;&nbsp;</td>
+									</logic:equal>
+									<logic:equal name="index" property="disbursementCode" value="2">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												indexed="true" readonly="true" /> &nbsp;&nbsp;</td>
+									</logic:equal>
+									<logic:equal name="index" property="disbursementCode" value="3">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												disabled="true" indexed="true" readonly="true" />
+											&nbsp;&nbsp;</td>
+									</logic:equal>
+									<logic:equal name="index" property="disbursementCode" value="4">
+										<td><html:text styleClass="form-control" name="index"
+												styleId="index[${itr}].accountNo"  maxlength="18"
+												property="accountNo" onclick="editAccNo(${itr});"
+												disabled="true" indexed="true" readonly="true" />
+											&nbsp;&nbsp;</td>
+									</logic:equal>
+
+*****************logic for acn no.enter **************
+
+**********logic for ifsc enter***********************
+                                                                                       <td><html:text  name="index"
+											styleId="index[${itr}].ifscCode" readonly="true" 
+											maxlength="11" property="ifscCode" indexed="true"
+											styleClass="form-control" /> <a href="javascript:doNothing()"
+										    onClick="showIFSC(<%=cnt%>)"> <img
+											src="images/search.jpeg" border=0 width="17" height="15"></a>
+										<html:hidden name="index" styleId="index[${itr}].branchName"
+											property="branchName" /> <html:hidden name="index"
+											styleId="index[${itr}].bankType" property="bankType"
+											indexed="true" /> <html:hidden name="index"
+											styleId="index[${itr}].branchCode" property="branchCode"
+											indexed="true" /> <html:hidden name="index"
+											styleId="index[${itr}].bankCode" property="bankCode"
+											indexed="true" /></td>
+
